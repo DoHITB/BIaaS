@@ -13,7 +13,7 @@ static int operate(FILE* fl, const char* name);
 static int moveOut(const char* name, char* result);
 
 typedef struct files{
-	char* fn;
+  char* fn;
   char* fo;
 }files;
 
@@ -24,7 +24,7 @@ static int max_value = 1024;
 int main(int argc, char** argv) {
   //printf("Service is awake!\n");
   
-	while(list_dir("f"));
+  while(list_dir("f"));
 	
   //printf("Service is done\n");
   
