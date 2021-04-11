@@ -109,28 +109,28 @@ static void store(const char *path, const char *file){
   //output file
   snprintf(fname, strlen(file) + 7, "./r/r_%s", file);
   fs[fsi].fo = malloc(sizeof(char) * strlen(fname) + 1);
-	memcpy(fs[fsi].fo, fname, sizeof(char) * strlen(fname) + 1);
+  memcpy(fs[fsi].fo, fname, sizeof(char) * strlen(fname) + 1);
     
   //printf("\t\t\tFile added: {%s - %s}\n", fs[fsi].fn, fs[fsi].fo);
 		
-	fsi++;
+  fsi++;
   
   free(fname);
 }
 
 //treat function. Opens a file, operate, and then closes it.
 static int treat(const char *file, const char* out){
-	FILE* fl;
-	int efl = -1;
+  FILE* fl;
+  int efl = -1;
 	
   int opr;
   
-	//printf("\t\t\tOpening: %s\n", file);
+  //printf("\t\t\tOpening: %s\n", file);
 	
-	fl = fopen(file, "r");
+  fl = fopen(file, "r");
 	
-	if(fl != NULL){
-		//printf("\t\t\tTreating...\n");
+  if(fl != NULL){
+    //printf("\t\t\tTreating...\n");
     
     opr = operate(fl, out);
     
@@ -140,9 +140,9 @@ static int treat(const char *file, const char* out){
       return opr;
     }
     
-		fclose(fl);
-	}else{
-		//printf("\t\t\tError!\n");
+    fclose(fl);
+  }else{
+    //printf("\t\t\tError!\n");
     
     return -10;
   }
@@ -232,21 +232,21 @@ static int operate(FILE* fl, const char* name){
 
 //moveOut function. Writes the result of an operation
 static int moveOut(const char* name, char* result){
-  	FILE* ofl;
+  FILE* ofl;
     
-    //printf("\t\t\t\tCreating... %s\n", name);
+  //printf("\t\t\t\tCreating... %s\n", name);
     
-    ofl = fopen(name, "w");
+  ofl = fopen(name, "w");
     
-    if(ofl == NULL){
-      //printf("\t\t\t\tError creating file %s\n", name);
-      return -1;
-    }
+  if(ofl == NULL){
+    //printf("\t\t\t\tError creating file %s\n", name);
+    return -1;
+  }
     
-    fputs(result, ofl);
-    fclose(ofl);
+  fputs(result, ofl);
+  fclose(ofl);
     
-    //printf("\t\t\t\tFile created: %s\n", name);
+  //printf("\t\t\t\tFile created: %s\n", name);
     
-    return 0;
+  return 0;
 }
