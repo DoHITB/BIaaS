@@ -33,10 +33,10 @@ int main(int argc, char** argv) {
 
 static int list_dir(const char *path) {
   struct dirent *entry;
-  DIR *dir = opendir(path);
-	int count = 0;
-	int li = 0;
-	int efl;
+  DIR *dir = opendir(path); 
+  int count = 0;
+  int li = 0;
+  int efl;
 	
   if (dir == NULL){
     //printf("\tDirectory %s does not exist!\n\tExiting...\n");
@@ -48,13 +48,13 @@ static int list_dir(const char *path) {
   fsi = 0;
 
   //Store up to 1024 files on "fs". They include input name and output name
-  while (((entry = readdir(dir)) != NULL) && count < max_value)
-		if(entry->d_name[0] != '.'){
-			//printf("\t\tStoring: %s\n",entry->d_name);
+  while (((entry = readdir(dir)) != NULL) && count < max_value){
+    if(entry->d_name[0] != '.'){
+      //printf("\t\tStoring: %s\n",entry->d_name);
       
-			store(path, entry->d_name);
-			++count;
-		}
+      store(path, entry->d_name);
+      ++count;
+    }
 
   closedir(dir);
 	
@@ -66,8 +66,8 @@ static int list_dir(const char *path) {
   //printf("\t%i files stored\n", count);
   //printf("\tTreating files\n");
   
-  //for each stored file, calculate. If it goes OK, delete the file
-	for(li = 0;li < fsi;li++){
+  //for each stored file, calculate. If it goes OK, delete the file 
+  for(li = 0;li < fsi;li++){
     efl = treat(fs[li].fn, fs[li].fo);
     
     if(efl == 0){
@@ -85,12 +85,12 @@ static int list_dir(const char *path) {
       
       return 0;
     }
-	}
+  }
   
   //printf("\t%i files were successfully removed\n", li);
   
   //we will return the number of treated files to keep service iterating itself
-	return count;
+  return count;
 }
 
 //store function. Populates fs structure with input and output route
