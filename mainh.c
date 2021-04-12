@@ -140,13 +140,13 @@ static int calc_handler(request_rec *r) {
       return OK;   
     }
     
-    if(strlen(op1) > 4096){
+    if(strlen(op1) > 1024){
       ap_rputs("\"error\" : \"err_op1_not_set\"}", r);
       
       return OK; 
     }
     
-    if(strlen(op2) > 4096){
+    if(strlen(op2) > 1024){
       ap_rputs("\"error\" : \"err_op2_not_set\"}", r);
       
       return OK; 
