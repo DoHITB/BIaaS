@@ -1,1 +1,1 @@
-sudo rm /var/www/c/r/* </dev/null &>/dev/null &
+watch -n 2 /var/www/c/plistStarter.sh </dev/null &>/dev/null &
