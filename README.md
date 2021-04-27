@@ -48,6 +48,8 @@ Getting a result will erase the `/r` file.
 10. Run `./watchplist.sh` and `./plistClean.sh` from `/var/www/c` folder.
 11. Your server is ready.
 
+You can also do most of this steps by executing `install_BIaaS.sh` (only need to edit .htaccess)
+
 
 ## plist
 This service just opens `/var/www/c/f` folder, iterate over it (storing up to 1024 files), and then treat them, storing results on `/var/www/c/r` folder, appending a `r_` to original file name.
