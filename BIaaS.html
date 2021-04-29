@@ -1,0 +1,43 @@
+<html>
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <title>BIaaS launcher</title>
+</head>
+<body>
+  <script type="text/javascript" src="https://dohitb.ddns.net/BIaaS.js"></script>
+  <input type="text" placeholder="Session name" id="session" />
+  <input type="text" placeholder="Operation" id="operation" />
+  <input type="text" placeholder="Op1" id="op1" />
+  <input type="text" placeholder="Op2" id="op2" />
+  <button onclick="operate();" id="operate" />Calculate</button>
+  
+  <script type="text/javascript">
+  function g(id){return document.getElementById(id);}
+	function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
+
+	function operate(){
+	  //lock the button
+	  lock(true);
+	  
+	  let session = g('session').value;
+	  let operation = g('operation').value;
+	  let op1 = g('op1').value;
+	  let op2 = g('op2').value;
+	  
+	  //perform operation
+	  makeOperation(session, operation, op1, op2);
+	  
+      //try to unlock the button
+	  unlock();
+	}
+	
+	async function unlock(){
+	  //just wait a half a second (each time) to know if it worked
+	  while(BIaaSStatus !== true){await sleep(500);}
+	  
+	  //unlock the button
+	  lock(false);	
+	}
+  </script>
+</body>
+</html>
