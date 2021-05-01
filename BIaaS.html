@@ -38,6 +38,8 @@
 	  //unlock the button
 	  lock(false);	
 	}
+
+  function page_sleep(ms){return new Promise(presolve => setTimeout(presolve, ms));}
   </script>
 </body>
 </html>
