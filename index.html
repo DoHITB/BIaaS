@@ -13,31 +13,33 @@
   
   <script type="text/javascript">
   function g(id){return document.getElementById(id);}
-	function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
+  function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
 
-	function operate(){
-	  //lock the button
-	  lock(true);
+  function operate(){
+    //lock the button
+    lock(true);
 	  
-	  let session = g('session').value;
-	  let operation = g('operation').value;
-	  let op1 = g('op1').value;
-	  let op2 = g('op2').value;
+    let session = g('session').value;
+    let operation = g('operation').value;
+    let op1 = g('op1').value;
+    let op2 = g('op2').value;
 	  
-	  //perform operation
-	  BIaaS_makeOperation(session, operation, op1, op2);
+    //perform operation
+    BIaaS_makeOperation(session, operation, op1, op2);
 	  
-          //try to unlock the button
-	  unlock();
-	}
+    //try to unlock the button
+    unlock();
+  }
 	
-	async function unlock(){
-	  //just wait a half a second (each time) to know if it worked
-	  while(BIaaSStatus !== true){await BIaaS_sleep(500);}
+  async function unlock(){
+    //just wait a half a second (each time) to know if it worked
+    while(BIaaSStatus !== true){await page_sleep(500);}
 	  
-	  //unlock the button
-	  lock(false);	
-	}
+    //unlock the button
+    lock(false);	
+    }
+
+  function page_sleep(ms){return new Promise(presolve => setTimeout(presolve, ms));}
   </script>
 </body>
 </html>
