@@ -30,8 +30,10 @@
     //try to unlock the button
     if(res === true)
       unlock();
-    else
+    else{
       lock(false);
+      console.log("BIaaS_makeoperation failed");
+    }
   }
 	
   async function unlock(){
