@@ -37,7 +37,10 @@
   }
 	
   async function unlock(){
-    //just wait a half a second (each time) to know if it worked
+    //first wait a bit to allow AJAX to complete
+    await page_sleep(1000);
+
+    //then just wait a half a second (each time) to know if it worked
     while(BIaaSStatus !== true){await page_sleep(500);}
 	  
     //unlock the button
