@@ -27,13 +27,13 @@
 	  //perform operation
 	  makeOperation(session, operation, op1, op2);
 	  
-      //try to unlock the button
+	  //try to unlock the button
 	  unlock();
 	}
 	
 	async function unlock(){
 	  //just wait a half a second (each time) to know if it worked
-	  while(BIaaSStatus !== true){await BIaaS_sleep(500);}
+	  while(BIaaSStatus !== true){await page_sleep(500);}
 	  
 	  //unlock the button
 	  lock(false);	
