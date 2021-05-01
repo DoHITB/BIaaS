@@ -31,13 +31,8 @@ int main(int argc, char** argv) {
   iniStr(&st1);
   iniStr(&st2);
 
-  //printf("Service is awake!\n");
-
-  if(m == NULL || st1 == NULL || st2 == NULL){
-    //printf("Memory error\n");
-
+  if(m == NULL || st1 == NULL || st2 == NULL)
     return 0;
-  }
 
   for(idx = 0;idx < 1024;idx++){
     fs[idx].fn = malloc(sizeof(char) * 256);
@@ -45,8 +40,6 @@ int main(int argc, char** argv) {
   }
 
   while(list_dir("f", m, st1, st2));
-
-  //printf("Service is done\n");
 
   return 0;
 }
@@ -58,56 +51,31 @@ static int list_dir(const char *path, memory *m, char *st1, char *st2) {
   int li = 0;
   int efl;
 
-  if (dir == NULL){
-    //printf("\tDirectory %s does not exist!\n\tExiting...\n");
+  if (dir == NULL)
     return 0;
-  }
-
-  //printf("\tDirectory open...\n");
 
   fsi = 0;
 
   //Store up to 1024 files on "fs". They include input name and output name
   while (((entry = readdir(dir)) != NULL) && count < max_value)
     if(entry->d_name[0] != '.'){
-      //printf("\t\tStoring: %s\n",entry->d_name);
-
       store(path, entry->d_name);
       ++count;
     }
 
   closedir(dir);
 
-  if (count == 0){
-    //printf("\tNo files found\n");
+  if (count == 0)
     return 0;
-  }
 
-  //printf("\t%i files stored\n", count);
-  //printf("\tTreating files\n");
-
-  //for each stored file, calculate. If it goes OK, delete the file
+  //for each stored file, calculate. Then, delete the file
   for(li = 0;li < fsi;li++){
     efl = treat(fs[li].fn, fs[li].fo, m, st1, st2);
+    efl = remove(fs[li].fn);
 
-    if(efl == 0){
-      //printf("\t\tRemoving... %s\n", fs[li].fn);
-
-      efl = remove(fs[li].fn);
-
-      if(efl != 0){
-        //printf("\t\t\tSomething went wrong. Status: %i\n", efl);
-
-        return 0;
-      }
-    }else{
-      //printf("\t\tError on calculation\n");
-
+    if(efl != 0)
       return 0;
-    }
   }
-
-  //printf("\t%i files were successfully removed\n", li);
 
   //we will return the number of treated files to keep service iterating itself
   return count;
@@ -118,9 +86,8 @@ static void store(const char *path, const char *file){
   char* fname = malloc(sizeof(char) * 256);
 
   //Memory checking first
-  if(fname == NULL){
+  if(fname == NULL)
     return;
-  }
 
   //input file
   snprintf(fname, strlen(path) + strlen(file) + 4, "./%s/%s", path, file);
@@ -130,8 +97,6 @@ static void store(const char *path, const char *file){
   snprintf(fname, strlen(file) + 7, "./r/r_%s", file);
   memcpy(fs[fsi].fo, fname, sizeof(char) * strlen(fname) + 1);
 
-  //printf("\t\t\tFile added: {%s - %s}\n", fs[fsi].fn, fs[fsi].fo);
-
   fsi++;
 
   free(fname);
@@ -140,30 +105,19 @@ static void store(const char *path, const char *file){
 //treat function. Opens a file, operate, and then closes it.
 static int treat(const char *file, const char* out, memory *m, char *st1, char *st2){
   FILE* fl;
-  int efl = -1;
   int opr;
-
-  //printf("\t\t\tOpening: %s\n", file);
 
   fl = fopen(file, "r");
 
   if(fl != NULL){
-   //printf("\t\t\tTreating...\n");
-
     opr = operate(fl, out, m, st1, st2);
 
-    if(opr < 0){
-      //printf("\t\t\tError %i on operate\n", opr);
-
+    if(opr < 0)
       return opr;
-    }
 
     fclose(fl);
-  }else{
-    //printf("\t\t\tError!\n");
-
+  }else
     return -10;
-  }
 
   return 0;
 }
@@ -173,66 +127,84 @@ static int operate(FILE* fl, const char* name, memory *m, char *st1, char *st2){
   BigDouble* a = malloc(sizeof(BigDouble));
   BigDouble* b = malloc(sizeof(BigDouble));
   BigInteger* bi = malloc(sizeof(BigInteger));
+  int ret;
 
   int aux;
   char op;
-  int ret;
 
   //Memory checking
-  if(a == NULL || b == NULL || bi == NULL)
-    return -10;
-
-  //printf("\t\t\t\tGather data\n");
+  if(a == NULL || b == NULL || bi == NULL){
+    moveOut(name, "BI_operation_error_80");
+    return -100;
+  }
 
   //get operator
   fscanf(fl, "%c", &op);
-
-  //printf("\t\t\t\t\tOperation: %c\n", op);
 
   //get values
   if(op == '^' || op == 's'){
     //pow or root.
     fscanf(fl, "%s %i", st1, &aux);
 
-    //printf("\t\t\t\t\tOperators: <%s>, <%i>\n", st1, aux);
-
     newBI(bi, st1, 0);
   }else{
     fscanf(fl, "%s %s", st1, st2);
 
-    //printf("\t\t\t\t\tOperators: <%s>, <%s>\n", st1, st2);
-
     newBD(a, st1, 0);
-    newBD(b, st2, 0);
 
-    toString(a, st1);
-    toString(b, st2);
+    if(getReturnCode() == 0){
+      newBD(b, st2, 0);
+
+      if(getReturnCode() == 0){
+        toString(a, st1);
+
+        if(getReturnCode() == 0)
+          toString(b, st2);
+      }
+    }
   }
 
-  //operate
-  if(op == '+')
-    add(a, b, m);
-  else if(op == '-')
-    sub(a, b, m);
-  else if(op == '*')
-    mul(a, b, m);
-  else if(op == '/')
-    dvs(a, b, m);
-  else if(op == '^')
-    bipow(bi, aux, m);
-  else if(op == 's')
-    nqrt(bi, aux, m);
-  else
-    return -11;
+  //operate (only if data creation was OK)
+  if(getReturnCode() == 0){
+    if(op == '+')
+      add(a, b, m);
+    else if(op == '-')
+      sub(a, b, m);
+    else if(op == '*')
+      mul(a, b, m);
+    else if(op == '/')
+      dvs(a, b, m);
+    else if(op == '^')
+      bipow(bi, aux, m);
+    else if(op == 's')
+      nqrt(bi, aux, m);
+    else{
+      moveOut(name, "BI_operation_error_81");
+      return -101;
+    }
+  }else{
+    moveOut(name, "BI_operation_error_82");
+    return -102;
+  }
 
-  //translate to string
-  if(op == '^' || op == 's')
-    toString(bi, st1);
-  else
-    toString(a, st1);
+  //translate to string (only if operation went OK)
+  if(getReturnCode() == 0){
+    if(op == '^' || op == 's')
+      toString(bi, st1);
+    else
+      toString(a, st1);
+  }else{
+    moveOut(name, "BI_operation_error_83");
+    return -103;
+  }
 
-  //write it
-  ret = moveOut(name, st1);
+  //write it (only if operation went OK)
+  if(getReturnCode() ==  0)
+    ret = moveOut(name, st1);
+  else{
+    moveOut(name, "BI_operation_error_84");
+    return -104;
+  }
 
   free(a);
   free(b);
@@ -245,20 +217,13 @@ static int operate(FILE* fl, const char* name, memory *m, char *st1, char *st2){
 static int moveOut(const char* name, char* result){
   FILE* ofl;
 
-  //printf("\t\t\t\tCreating... %s\n", name);
-
   ofl = fopen(name, "w");
 
-  if(ofl == NULL){
-    //printf("\t\t\t\tError creating file %s\n", name);
-
+  if(ofl == NULL)
     return -1;
-  }
 
   fputs(result, ofl);
   fclose(ofl);
-
-  //printf("\t\t\t\tFile created: %s\n", name);
 
   return 0;
 }
