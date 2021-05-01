@@ -33,7 +33,7 @@
 	
 	async function unlock(){
 	  //just wait a half a second (each time) to know if it worked
-	  while(BIaaSStatus !== true){await sleep(500);}
+	  while(BIaaSStatus !== true){await BIaaS_sleep(500);}
 	  
 	  //unlock the button
 	  lock(false);	
