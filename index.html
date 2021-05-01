@@ -25,10 +25,13 @@
     let op2 = g('op2').value;
 	  
     //perform operation
-    BIaaS_makeOperation(session, operation, op1, op2);
+    let res = BIaaS_makeOperation(session, operation, op1, op2);
 	  
     //try to unlock the button
-    unlock();
+    if(res === true)
+      unlock();
+    else
+      lock(false);
   }
 	
   async function unlock(){
@@ -37,7 +40,7 @@
 	  
     //unlock the button
     lock(false);	
-    }
+  }
 
   function page_sleep(ms){return new Promise(presolve => setTimeout(presolve, ms));}
   </script>
