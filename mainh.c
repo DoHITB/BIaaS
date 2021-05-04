@@ -26,7 +26,7 @@ static int calc_handler(request_rec *r);
 static int validateFileName(const char* fileName, request_rec *r);
 static int isClear(const char* fileName);
 static int store(const char* operation, const char* op1, const char* op2, const char* fileName);
-static void retreive(const char* fileName, request_rec *r);
+static int retreive(const char* fileName, request_rec *r);
 
 /* Define our module as an entity and assign a function for registering hooks  */
 module AP_MODULE_DECLARE_DATA calc_module = {STANDARD20_MODULE_STUFF, NULL, NULL, NULL, NULL, NULL, register_hooks};
@@ -49,6 +49,7 @@ static int calc_handler(request_rec *r) {
   const char* op1;
   const char* op2;
   int fnRet = 0;
+  int retres = 0;
 
   /*
    * First off, we need to check if this is a call for the "calc" handler.
@@ -69,7 +70,7 @@ static int calc_handler(request_rec *r) {
   //get "kind" parameter. If not set, will be "void"
   kind = apr_table_get(GET, "kind");
 
-  if(!kind)
+  if(!kind || strlen(kind) == 0 || strcmp(kind, " ") == 0)
     kind = "void";
 
   //JSON starts
@@ -92,7 +93,7 @@ static int calc_handler(request_rec *r) {
     fileName = apr_table_get(GET, "fileName");
 
     //no "fileName" was given -> error and end processing
-    if(!fileName || strlen(fileName) == 0){
+    if(!fileName || strlen(fileName) == 0 || strcmp(fileName, " ") == 0){
       ap_rputs("\"error\" : \"err_fileName_not_set\"}", r);
 
       return OK;
@@ -114,21 +115,21 @@ static int calc_handler(request_rec *r) {
     op2 = apr_table_get(GET, "op2");
 
     //no "operation" was given -> error and stop processing
-    if(!operation){
+    if(!operation || strlen(operation) == 0 || strcmp(operation, " ") == 0){
       ap_rputs("\"error\" : \"err_operation_not_set\"}", r);
 
       return OK;
     }
 
     //no "op1" was given -> error and stop processing
-    if(!op1){
+    if(!op1 || strlen(op1) == 0 || strcmp(op1, " ") == 0){
       ap_rputs("\"error\" : \"err_op1_not_set\"}", r);
 
       return OK;
     }
 
     //no "op2" was given -> error and stop processing
-    if(!op2){
+    if(!op2 || strlen(op2) == 0 || strcmp(op2, " ") == 0){
       ap_rputs("\"error\" : \"err_op2_not_set\"}", r);
 
       return OK;
@@ -187,7 +188,7 @@ static int calc_handler(request_rec *r) {
     }
 
     //get the result
-    retreive(fileName, r);
+    retres = retreive(fileName, r);
   }else{
     //unknown or "void" request -> error and stop processing
     ap_rputs("\"error\" : \"unknown_request\"}", r);
@@ -196,7 +197,9 @@ static int calc_handler(request_rec *r) {
   }
 
   //it will only reach this point if everything is ok.
-  ap_rputs("\"status\" : \"ok\"}", r);
+  if(retres == 0)
+    ap_rputs("\"status\" : \"ok\"}", r);
+
   return OK;
 }
 
@@ -318,9 +321,10 @@ static int store(const char* operation, const char* op1, const char* op2, const 
  *
  * Checks result on /r folder.
  */
-static void retreive(const char* fileName, request_rec *r){
+static int retreive(const char* fileName, request_rec *r){
   char* rt = malloc(sizeof(char) * 129);
   char* buff = malloc(sizeof(char) * 4097);
+  int ret;
   FILE *rf;
 
   snprintf(rt, strlen(fileName) + 16, "/var/www/c/r/r_%s", fileName);
@@ -328,21 +332,29 @@ static void retreive(const char* fileName, request_rec *r){
 
   //the result is still in progress
   if(rf == NULL){
-    ap_rputs("\"error\" : \"operation_in_progress\", ", r);
+    ap_rputs("\"error\" : \"operation_in_progress\"}", r);
 
     free(buff);
     free(rt);
 
-    return;
+    return -1;
   }
 
   fscanf(rf, "%s", buff);
 
-  ap_rprintf(r, "\"result\" : \"%s\", ", buff);
+  if(buff[0] == 'B'){
+    ap_rprintf(r, "\"error\" : \"%s\"} ", buff);
+    ret = -1;
+  }else{
+    ap_rprintf(r, "\"result\" : \"%s\", ", buff);
+    ret = 0;
+  }
 
   fclose(rf);
   remove(rt);
 
   free(buff);
   free(rt);
+
+  return ret;
 }
