@@ -6,140 +6,213 @@
 <body>
   <script type="text/javascript" src="https://dohitb.ddns.net/BIaaS.js"></script>
   <input type="text" placeholder="Session name" id="session" />
-  <!--<input type="text" placeholder="Operation" id="operation" />
-  <input type="text" placeholder="Op1" id="op1" />
-  <input type="text" placeholder="Op2" id="op2" />-->
   <input type="text" placeholder="Parsing" id="entry" />
   <button onclick="operate();" id="operate" />Calculate</button>
   <br /><br />
   <input type="text" placeholder="Result" id="result" />
   <br />
   <input type="text" placeholder="Messages" id="messages" />
-  
-  
   <script type="text/javascript">
-    var variables_token = [];
-	var variables_value = [];
-	var iVar = 0;
-	var stop = false;
-	
-    function g(id){return document.getElementById(id);}
-	function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
-	function bind(k){g(k).addEventListener('keyup', function(event){if(event.code === 'Enter' || event.code === 'NumpadEnter'){operate();}})}
-	function binding(){
-      bind('session');
-      /*bind('operation');
-      bind('op1');
-      bind('op2');*/
-      bind('result');
-	  bind('entry');
-	}
+  var variables_token = [];
+  var variables_value = [];
+  var iVar = 0;
+  var stop = false;
+  var mainRes;
+  
+  function g(id){return document.getElementById(id);}
+  function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
+  function bind(k){g(k).addEventListener('keyup', function(event){if(event.code === 'Enter' || event.code === 'NumpadEnter'){operate();}})}
+  function binding(){
+    bind('session');
+    bind('result');
+    bind('entry');
+  }
 
-	function operate(){
-	  let session = g('session').value;
-	  let operation = "";
-	  let op1 = "";
-	  let op2 = "";
-	  let vari = "";
-	  let varMode = false;
-	  
-	  if(g('entry').value == ""){
-	    operation = g('operation').value;
-	    op1 = g('op1').value;
-	    op2 = g('op2').value;
-	    //res = false;
-	  }else{
-	    //enable varMode to allow creation of variables
-	    varMode = true;
-		
-	    //rawTxt will have a kind of "a = b + c" text
-	    let rawTxt = g('entry').value;
-		
-		//spt will have [vari, op1, operation, op2]
-		let spt = rawTxt.split("=");
-		
-		//sp2 wll have [op1, op2]
-		let sp2 = getOps(spt[1]);
-		
-		if(sp2 === null)
-		  return;
+  function operate(){
+    let session = g('session').value;
+    let operation = "";
+    let op1 = "";
+    let op2 = "";
+    let vari = "";
+    let varMode = true;
+    let calculation = true;
+    let spt = "";
+    
+    //rawTxt will have a kind of "a = b + c" text
+    let rawTxt = g('entry').value;
+    
+    if(rawTxt.charAt(0) == "$")
+      //spt will have [vari, op1 + operation + op2]
+      spt = rawTxt.split("=");
+    else{
+      //there's no variable assignation
+      spt = [null, rawTxt];
+      varMode = false;
+    }
+    
+    //sp2 wll have [op1, op2] or [op1]
+    let sp2 = getOps(spt[1]);
+    
+    if(sp2 === null && varMode){
+      //there's no operation, just assignation (it only have sense on varMode
+      sp2 = [spt[1], null, null];
+      calculation = false;
+    }
 
-		vari = spt[0].trim();
-		operation = sp2[2].trim();
-		op1 = sp2[0].trim();
-		op2 = sp2[1].trim();
-	  }
-	  
-	  //lock the button -- temp
-	  lock(true);
-	  
-	  //perform operation
-	  BIaaS_makeOperation(session, operation, op1, op2);
-	  
-	  //token variable 
-	  stop = true;
-	  unlock();
-	  createVar(varMode, vari);
-	}
-	
-	//This function will try to parse the operators of a calculation
-	function getOps(spt){
-	  let ops = ['+', '-', '*', '/', 's', '^'];
-	  let goi = 0;
-	  
-	  for(goi = 0;goi < ops.length;goi++){
-	    let gospt = spt.split(ops[goi]);
-		
-		if(gospt.length > 1){
-		  gospt.push(ops[goi]);
-		  
-		  return gospt;
-		}
-	  }
-	  
-	  return null;
-	}
-	
-	async function unlock(){
-	  //just wait a half a second (each time) to know if it worked
-	  while(BIaaSStatus !== true){await BIaaS_sleep(500);}
-	  
-	  //unlock the button
-	  lock(false);
-	  
-	  //refresh result
-	  putResult();
-	  
-	  //allow code to continue
-	  stop = false;
-	}
-	
-	//create a variable
-	async function createVar(varMode, vari){
-	  //first, wait to completion of unlock
-	  while(stop){await BIaaS_sleep(600);}
-	
-	  if(varMode === true){
-	    if(BIaaSMessages === ""){
-	      variables_token.push(vari);
-		  variables_value.push(BIaaSResult);
-		  
-		  console.log(" " + variables_token[iVar] + " = " + variables_value[iVar] + ";");
-		  iVar++;
-		}
-	  }
-	}
-	
-	function putResult(){
-	  //restart form
-	  g('result').value = '';
-	  g('messages').value = '';
+    if(varMode)
+      vari = spt[0].trim();
+    
+    op1 = searchVar(sp2[0].trim());
+    
+    try{
+      op2 = searchVar(sp2[1].trim());
+    }catch(e){
+      //if calculation == false, trim will fail
+      op2 = null;
+    }
+    
+    //only call to BIaaS if there's a calculation to make
+    if(calculation){
+      operation = sp2[2].trim();
+    
+      //lock the button
+      lock(true);
+    
+      //perform operation
+      BIaaS_makeOperation(session, operation, op1, op2);
+    
+      //token variable 
+      stop = true;
+      unlock();
+    }else{
+      mainRes = sp2[0];
+      g('result').value = mainRes;
+    }
 
-	  g('result').value = BIaaSResult;
-	  g('messages').value = BIaaSMessages;
-	}
-	
-	binding();
+    createVar(varMode, vari, calculation);
+  }
+  
+  //This function will try to parse the operators of a calculation
+  function getOps(spt){
+    let ops = ['+', '-', '*', '/', 's', '^'];
+    let goi = 0;
+    
+    for(goi = 0;goi < ops.length;goi++){
+      let gospt = spt.split(ops[goi]);
+    
+      if(gospt.length > 1){
+        gospt.push(ops[goi]);
+      
+        return gospt;
+      }
+    }
+    
+    return null;
+  }
+  
+  function searchVar(op){
+    //on some cases, op may be null
+    if(op === null)
+      return;
+      
+    if(op.charAt(0) == "$"){
+      let svret = isVar(op);
+      
+      if(svret >= 0)
+        return variables_value[svret];
+    }else
+      return op;
+      
+    return null;
+  }
+  
+  //Searches for an specific variable existence
+  function isVar(op){
+    let ivi = 0;
+      
+    for(;ivi < variables_token.length;ivi++)
+      if(variables_token[ivi] == op)
+        return ivi;
+        
+    return -1;
+  }
+  
+  async function unlock(){
+    //just wait a half a second (each time) to know if it worked
+    while(BIaaSStatus !== true){await BIaaS_sleep(500);}
+    
+    //unlock the button
+    lock(false);
+    
+    //refresh result
+    putResult();
+    
+    //allow code to continue
+    stop = false;
+  }
+  
+  //create a variable
+  async function createVar(varMode, vari, calculation){
+    if(calculation)
+      //first, wait to completion of unlock (only if calculation has made)
+      while(stop){await BIaaS_sleep(600);}
+  
+    if(varMode === true){
+      let cvret = isVar(vari);
+      
+      if(cvret == -1)
+        //new var
+        pullVar(vari, calculation);
+      else
+        //update var
+        updateVar(vari, calculation, cvret);
+    }
+  }
+  
+  //pulls a new var to variable_
+  function pullVar(vari, calculation){
+    if(calculation){
+      if(BIaaSMessages === ""){
+        variables_token.push(vari);
+        variables_value.push(BIaaSResult);
+      
+        console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
+        iVar++;
+      }
+    }else{
+      variables_token.push(vari);
+      variables_value.push(mainRes);
+      
+      console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
+      iVar++;
+    }
+  }
+  
+  //updates the value of an existing variable_
+  function updateVar(vari, calculation, cvret){
+    if(calculation){
+      if(BIaaSMessages === ""){
+        variables_value[cvret] = BIaaSResult;
+      
+        console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
+      }
+    }else{
+      variables_value[cvret] = mainRes;
+      
+      console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
+    }
+  }
+  
+  function putResult(){
+    //restart form
+    g('result').value = '';
+    g('messages').value = '';
+
+    g('result').value = BIaaSResult;
+    g('messages').value = BIaaSMessages;
+  }
+  
+  binding();
   </script>
 </body>
 </html>
