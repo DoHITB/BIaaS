@@ -1,17 +1,54 @@
 <html>
 <head>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <style type="text/css">
+    #container{
+      border: 1px solid black;
+      width: 100%;
+      height: 95%;
+      font-family: consolas;
+      font-size: 0.9em;
+      overflow-y: scroll;
+    }
+    
+    .txtInput, .txtOutput{
+      margin-left: 6px;
+      margin-top: 6px;
+    }
+    
+    .txtInput{
+      font-style: italic;
+      color: grey;
+    }
+    
+    .txtOutput{
+      color: black;
+    }
+    
+    #entry{
+      width: 97%;
+      margin-top: 15px;
+    }
+    
+    #operate{
+      width: 2%;
+      background: url(button.png);
+      height: 21px;
+      border: 1px solid;
+      padding: 0;
+      margin: 0;
+      top: 4px;
+      position: relative;
+    }
+  </style>
   <title>BIaaS launcher</title>
 </head>
 <body>
   <script type="text/javascript" src="https://dohitb.ddns.net/BIaaS.js"></script>
-  <input type="text" placeholder="Session name" id="session" />
+  <div id="container"></div>
+  <!--<input type="text" placeholder="Session name" id="session" />-->
   <input type="text" placeholder="Parsing" id="entry" />
-  <button onclick="operate();" id="operate" />Calculate</button>
-  <br /><br />
-  <input type="text" placeholder="Result" id="result" />
-  <br />
-  <input type="text" placeholder="Messages" id="messages" />
+  <button onclick="operate();" id="operate" /></button>
   <script type="text/javascript">
   //script checking
   try{if(isBIaaSLoaded){}}catch(e){alert("Server unavailable");}
@@ -21,18 +58,41 @@
   var iVar = 0;
   var stop = false;
   var mainRes;
+  var sessionName = "";
+  var isSession = false;
   
   function g(id){return document.getElementById(id);}
   function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
   function bind(k){g(k).addEventListener('keyup', function(event){if(event.code === 'Enter' || event.code === 'NumpadEnter'){operate();}})}
   function binding(){
-    bind('session');
-    bind('result');
+    /*bind('session');
+    bind('result');*/
     bind('entry');
+  }
+  
+  function getSession(){
+    putResult("Please enter your Session_Name", false);
+    isSession = true;
+  }
+  
+  function getSessionName(value){
+    if(value == "" || value == undefined){
+      getSession();
+      return;
+    }
+    
+    putResult(value, true);
+    sessionName = value;
+    putResult("Welcome to [" + value + "] session", false);
+    putResult("Now you can operate", false);
+    
+    isSession = false;
+    
+    g('entry').value = '';
   }
 
   function operate(){
-    let session = g('session').value;
+    //let session = g('session').value;
     let operation = "";
     let op1 = "";
     let op2 = "";
@@ -41,8 +101,14 @@
     let calculation = true;
     let spt = "";
     
+    //first of all, we get the session name (fileName)
+    if(isSession)
+      return getSessionName(g('entry').value);
+    
     //rawTxt will have a kind of "a = b + c" text
     let rawTxt = g('entry').value;
+    
+    putResult(rawTxt, true);
     
     if(rawTxt.charAt(0) == "$")
       //spt will have [vari, op1 + operation + op2]
@@ -82,17 +148,18 @@
       lock(true);
     
       //perform operation
-      BIaaS_makeOperation(session, operation, op1, op2);
+      BIaaS_makeOperation(sessionName, operation, op1, op2);
     
       //token variable 
       stop = true;
       unlock();
-    }else{
+    }else
       mainRes = sp2[0];
-      g('result').value = mainRes;
-    }
 
     createVar(varMode, vari, calculation);
+    
+    //empty the field
+    g('entry').value = '';
   }
   
   //This function will try to parse the operators of a calculation
@@ -147,9 +214,6 @@
     //unlock the button
     lock(false);
     
-    //refresh result
-    putResult();
-    
     //allow code to continue
     stop = false;
   }
@@ -177,16 +241,18 @@
     if(calculation){
       if(BIaaSMessages === ""){
         variables_token.push(vari);
-        variables_value.push(BIaaSResult);
+        variables_value.push(BIaaSResult.trim());
       
         console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
+        putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", false);
         iVar++;
       }
     }else{
       variables_token.push(vari);
-      variables_value.push(mainRes);
+      variables_value.push(mainRes.trim());
       
       console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
+      putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", false);
       iVar++;
     }
   }
@@ -195,27 +261,34 @@
   function updateVar(vari, calculation, cvret){
     if(calculation){
       if(BIaaSMessages === ""){
-        variables_value[cvret] = BIaaSResult;
+        variables_value[cvret] = BIaaSResult.trim();
       
         console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
+        putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", false);
       }
     }else{
-      variables_value[cvret] = mainRes;
+      variables_value[cvret] = mainRes.trim();
       
       console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
+      putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", false);
     }
   }
   
-  function putResult(){
-    //restart form
-    g('result').value = '';
-    g('messages').value = '';
+  function putResult(txt, input){
+    let extra = '';
+    let txtclass = '';
+    
+    if(input){
+      extra = '> ';
+      txtclass = 'txtInput';
+    }else
+      txtclass = 'txtOutput'
 
-    g('result').value = BIaaSResult;
-    g('messages').value = BIaaSMessages;
+    g('container').innerHTML += '<div class="' + txtclass + '">' + extra + txt + '</div>';
   }
   
   binding();
+  getSession();
   </script>
 </body>
 </html>
