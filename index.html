@@ -40,19 +40,28 @@
       top: 4px;
       position: relative;
     }
+    
+    #status{
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 1px solid black;
+      border-radius: 16px;
+      position: relative;
+      top: 4px;
+      left: 1%;
+    }
   </style>
   <title>BIaaS launcher</title>
 </head>
 <body>
   <script type="text/javascript" src="https://dohitb.ddns.net/BIaaS.js"></script>
   <div id="container"></div>
-  <!--<input type="text" placeholder="Session name" id="session" />-->
   <input type="text" placeholder="Parsing" id="entry" />
-  <button onclick="operate();" id="operate" /></button>
+  <div id="status"></div>
   <script type="text/javascript">
-  //script checking
-  try{if(isBIaaSLoaded){}}catch(e){alert("Server unavailable");}
-  
+  status(0);
+    
   var variables_token = [];
   var variables_value = [];
   var iVar = 0;
@@ -60,23 +69,51 @@
   var mainRes;
   var sessionName = "";
   var isSession = false;
+  var loaded = true;
+  
+  //command tracking
+  var command = [];
+  var commandI = 0;
+  var commandM = 0;
+  
+  //script checking
+  try{if(isBIaaSLoaded){status(1)}}catch(e){status(2);loaded = false;}
   
   function g(id){return document.getElementById(id);}
-  function lock(k){g('operate').disabled = k;g('operate').enabled = !k;}
-  function bind(k){g(k).addEventListener('keyup', function(event){if(event.code === 'Enter' || event.code === 'NumpadEnter'){operate();}})}
-  function binding(){
-    /*bind('session');
-    bind('result');*/
-    bind('entry');
+  function lock(k){g('entry').disabled = k;g('entry').enabled = !k;}
+  function bind(k){g(k).addEventListener('keyup', function(event){if(event.code === 'Enter' || event.code === 'NumpadEnter'){operate();}else if(event.code === "ArrowUp"){getCommand(true);}else if(event.code === "ArrowDown"){getCommand(false);}})}
+  
+  //sets the "led" indicator
+  function status(level){
+    if(level == 0){
+      //loading
+      g('status').style.border = '1px solid #ca8302';
+      g('status').style.background = 'orange';
+    }else if(level == 1){
+      //loaded
+      g('status').style.border = '1px solid #134e13';
+      g('status').style.background = 'green';
+    }else if(level == 2){
+      //error
+      g('status').style.border = '1px solid #500404';
+      g('status').style.background = 'red';
+    }
   }
   
+  //asks and stores session name (fileName)
   function getSession(){
-    putResult("Please enter your Session_Name", false);
-    isSession = true;
+    if(loaded){
+      putResult("Please enter your Session_Name", false);
+      isSession = true;
+    }else{
+      putResult("The server cannot be reached. Please try again on a few minutes", false);
+      isSession = true;
+    }
   }
   
+  //asks and stores session name (fileName)
   function getSessionName(value){
-    if(value == "" || value == undefined){
+    if(value == "" || value == undefined || loaded == false){
       getSession();
       return;
     }
@@ -91,6 +128,7 @@
     g('entry').value = '';
   }
 
+  //makes an operation
   function operate(){
     //let session = g('session').value;
     let operation = "";
@@ -105,10 +143,14 @@
     if(isSession)
       return getSessionName(g('entry').value);
     
+    //loading...
+    status(0);
+    
     //rawTxt will have a kind of "a = b + c" text
     let rawTxt = g('entry').value;
     
     putResult(rawTxt, true);
+    addCommand(rawTxt);
     
     if(rawTxt.charAt(0) == "$")
       //spt will have [vari, op1 + operation + op2]
@@ -234,6 +276,9 @@
         //update var
         updateVar(vari, calculation, cvret);
     }
+    
+    //ready... (we do it here as it's async function)
+    status(1);
   }
   
   //pulls a new var to variable_
@@ -287,7 +332,24 @@
     g('container').innerHTML += '<div class="' + txtclass + '">' + extra + txt + '</div>';
   }
   
-  binding();
+  function getCommand(){
+    //if there's no commands yet, end
+    if(commandM == 0)
+      return;
+      
+    commandI = (commandI + 1) % commandM;
+    
+    g('entry').value = command[commandM - commandI - 1];
+    console.log(commandI);
+  }
+  
+  function addCommand(txt){
+    command.push(txt);
+    ++commandM;
+    commandI = -1;
+  }
+  
+  bind('entry');
   getSession();
   </script>
 </body>
