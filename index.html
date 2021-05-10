@@ -11,7 +11,7 @@
       overflow-y: auto;
     }
     
-    .txtInput, .txtOutput{
+    .txtInput, .txtOutput, .txtError{
       margin-left: 6px;
       margin-top: 6px;
     }
@@ -23,6 +23,10 @@
     
     .txtOutput{
       color: black;
+    }
+    
+    .txtError{
+      color: #da1717;
     }
     
     #entry{
@@ -70,6 +74,7 @@
   var sessionName = "";
   var isSession = false;
   var loaded = true;
+  let calcRet = true;
   
   //command tracking
   var command = [];
@@ -103,10 +108,10 @@
   //asks and stores session name (fileName)
   function getSession(){
     if(loaded){
-      putResult("Please enter your Session_Name", false);
+      putResult("Please enter your Session_Name", 0);
       isSession = true;
     }else{
-      putResult("The server cannot be reached. Please try again on a few minutes", false);
+      putResult("The server cannot be reached. Please try again on a few minutes", 0);
       isSession = true;
     }
   }
@@ -118,12 +123,20 @@
       return;
     }
     
-    putResult(value, true);
-    sessionName = value;
-    putResult("Welcome to [" + value + "] session", false);
-    putResult("Now you can operate", false);
+    let vcheck = BIaaS_checkFN(value);
     
-    isSession = false;
+    if(vcheck){
+      putResult(value, 1);
+      sessionName = value;
+      putResult("Welcome to [" + value + "] session", 0);
+      putResult("Now you can operate", 0);
+    
+      isSession = false;
+    }else{
+      putResult("The selected Session_Name was incorrect. Please try again", -1);
+      putResult("Only number (0-9) and alphabetic (a-z, A-Z) characters are allowed", -1);
+      getSession();
+    }
     
     g('entry').value = '';
   }
@@ -149,7 +162,9 @@
     //rawTxt will have a kind of "a = b + c" text
     let rawTxt = g('entry').value;
     
-    putResult(rawTxt, true);
+    calcRet = true;
+    
+    putResult(rawTxt, 1);
     addCommand(rawTxt);
     
     if(rawTxt.charAt(0) == "$")
@@ -183,14 +198,14 @@
     }
     
     //only call to BIaaS if there's a calculation to make
-    if(calculation){
+    if(calculation){      
       operation = sp2[2].trim();
     
       //lock the button
       lock(true);
     
       //perform operation
-      BIaaS_makeOperation(sessionName, operation, op1, op2);
+      calcRet = BIaaS_makeOperation(sessionName, operation, op1, op2);
     
       //token variable 
       stop = true;
@@ -277,6 +292,10 @@
         updateVar(vari, calculation, cvret);
     }
     
+    if(BIaaSMessages != "" && BIaaSMessages != undefined){
+      putResult("An error happened!: " + BIaaSMessages, -1);
+    }
+    
     //ready... (we do it here as it's async function)
     status(1);
   }
@@ -289,7 +308,7 @@
         variables_value.push(BIaaSResult.trim());
       
         console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
-        putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", false);
+        putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", 0);
         iVar++;
       }
     }else{
@@ -297,7 +316,7 @@
       variables_value.push(mainRes.trim());
       
       console.log("" + variables_token[iVar] + " = " + variables_value[iVar] + ";");
-      putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", false);
+      putResult(variables_token[iVar] + " = " + variables_value[iVar] + ";", 0);
       iVar++;
     }
   }
@@ -309,13 +328,13 @@
         variables_value[cvret] = BIaaSResult.trim();
       
         console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
-        putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", false);
+        putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", 0);
       }
     }else{
       variables_value[cvret] = mainRes.trim();
       
       console.log("" + variables_token[cvret] + " = " + variables_value[cvret] + ";");
-      putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", false);
+      putResult(variables_token[cvret] + " = " + variables_value[cvret] + ";", 0);
     }
   }
   
@@ -323,11 +342,13 @@
     let extra = '';
     let txtclass = '';
     
-    if(input){
+    if(input == 1){
       extra = '> ';
       txtclass = 'txtInput';
-    }else
+    }else if(input == 0)
       txtclass = 'txtOutput'
+    else if(input == -1)
+      txtclass = 'txtError'
 
     g('container').innerHTML += '<div class="' + txtclass + '">' + extra + txt + '</div>';
   }
