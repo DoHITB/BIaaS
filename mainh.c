@@ -25,6 +25,7 @@ static int calc_handler(request_rec *r);
 /* Internal functions */
 static int validateFileName(const char* fileName, request_rec *r);
 static int isClear(const char* fileName);
+static int checkFormat(const char* fileName);
 static int store(const char* operation, const char* op1, const char* op2, const char* fileName);
 static int retreive(const char* fileName, request_rec *r);
 
@@ -286,6 +287,32 @@ static int isClear(const char* fileName){
     if(fileName[ici] == '.' ||
        fileName[ici] == '/')
       return -1;
+
+  return checkFormat(fileName);
+}
+
+/*
+ * checkFormat
+ *
+ * Checks for fileName to be between {0-9, A-Z, a-z}
+ */
+static int checkFormat(const char* fileName){
+  int cfi = 0;
+  int cfm = strlen(fileName);
+  int cft = 0;
+
+  for(cfi = 0;cfi < cfm;cfi++)
+    /*
+     * Between 48 and  57: Number (0-9)
+     * Between 65 and  90: Character (A-Z)
+     * Between 97 and 122: Character (a-z)
+     */
+    if((fileName[cfi] >= 48 && fileName[cfi] <= 57) ||
+       (fileName[cfi] >= 65 && fileName[cfi] <= 90) ||
+       (fileName[cfi] >= 97 && fileName[cfi] <= 122))
+      continue;
+    else
+      return -2;
 
   return 0;
 }
