@@ -14,6 +14,7 @@
     .txtInput, .txtOutput, .txtError{
       margin-left: 6px;
       margin-top: 6px;
+      overflow-wrap: anywhere;
     }
     
     .txtInput{
@@ -171,6 +172,16 @@
     g('entry').value = '';
     
     status(1);
+    
+    return;
+  }
+
+  //greets the user
+  function welcome(){
+    putResult("Welcome to BIaaS website. In order to operate, we need a 'Session_Name' given from your side.", 0);
+    putResult("This 'Session_Name' will let BI software to identify your operations and communicate with BIaaS", 0);
+    putResult("Each time BIaaS fetch your operation's result, the file containing your 'Session_Name' will be destroyed", 0);
+    putResult("&nbsp;", 0);
     
     return;
   }
@@ -418,6 +429,7 @@
   }
   
   bind('entry');
+  welcome();
   getSession();
   </script>
 </body>
