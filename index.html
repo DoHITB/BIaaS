@@ -130,6 +130,7 @@
       sessionName = value;
       putResult("Welcome to [" + value + "] session", 0);
       putResult("Now you can operate", 0);
+      putResult("Type HELP to get information about how to use the command line", 0);
     
       isSession = false;
     }else{
@@ -139,6 +140,39 @@
     }
     
     g('entry').value = '';
+  }
+
+  //displays some help
+  function help(){
+    putResult("For making operations, use [res] = op1 {+|-|*|/|s|^} op2 where:", 0);
+    putResult("&nbsp;&nbsp;'res' is optional, and it's a variable on which the result will be stored", 0);
+    putResult("&nbsp;&nbsp;'op1' and 'op2' are mandatory, and are a combination of two numbers or varialbes (in any order of combination", 0);
+    putResult("&nbsp;&nbsp;'+' is for adding; '-' for subtracting; '*' for multiplying; '/' for dividing; 's' for making n-root; and '^' is for powering", 0);
+    putResult("&nbsp;&nbsp;on n-root the operation res = op1 s op2 will make the op2-root of op1", 0);
+    putResult("&nbsp;&nbsp;on powering, the operation res = op1 ^ op2 will bring op1 to the power of op2", 0);
+    putResult("&nbsp;", 0);
+    putResult("You can use and assign variables. All variables may start by '$' sign", 0);
+    putResult("&nbsp;&nbsp;An example will be: $a = 3 + 2", 0);
+    putResult("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$b = 5 * 5", 0);
+    putResult("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$c = $a ^ $b", 0);
+    putResult("&nbsp;", 0);
+    putResult("You can also type CLEAR to empty the log", 0);
+    
+    g('entry').value = '';
+    
+    status(1);
+    
+    return;
+  }
+  
+  //clears the screen
+  function clear(){
+    g('container').innerHTML = '';
+    g('entry').value = '';
+    
+    status(1);
+    
+    return;
   }
 
   //makes an operation
@@ -161,6 +195,15 @@
     
     //rawTxt will have a kind of "a = b + c" text
     let rawTxt = g('entry').value;
+    
+    //custom commands here!
+    //////////////////////
+    if(rawTxt == "HELP")
+      return help();
+      
+    if(rawTxt == "CLEAR")
+      return clear();
+    //////////////////////
     
     calcRet = true;
     
@@ -290,6 +333,10 @@
       else
         //update var
         updateVar(vari, calculation, cvret);
+    }else{
+      if(BIaaSResult != ""){
+        putResult(BIaaSResult, 0);
+      }
     }
     
     if(BIaaSMessages != "" && BIaaSMessages != undefined){
