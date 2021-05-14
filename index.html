@@ -185,6 +185,14 @@
     
     return;
   }
+  
+  //gets the latest news
+  function getNews(){
+    putResult("Due unexpected server error, BIaaS will be temporary unavailable", -1);
+    putResult("We're working on it, please try again in a few minutes", -1);
+    
+    return;
+  }
 
   //makes an operation
   function operate(){
@@ -430,6 +438,7 @@
   
   bind('entry');
   welcome();
+  getNews();
   getSession();
   </script>
 </body>
