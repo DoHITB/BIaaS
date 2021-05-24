@@ -109,8 +109,9 @@
   //asks and stores session name (fileName)
   function getSession(){
     if(loaded){
-      putResult("Please enter your Session_Name", 1);
+      putResult("Please enter your Session_Name", 0);
       isSession = true;
+      status(1);
     }else{
       putResult("The server cannot be reached. Please try again on a few minutes", -1);
       isSession = true;
