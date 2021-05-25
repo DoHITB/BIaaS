@@ -105,7 +105,7 @@ static int calc_handler(request_rec *r) {
 
     //fnRet != 0 means file exists -> error and end processing
     if(fnRet != 0){
-      ap_rputs("\"error\" : \"err_fileName_not_set\"}", r);
+      ap_rprintf(r, "\"error\" : \"err_fileName_not_set_%i\"}", fnRet);
 
       return OK;
     }
@@ -182,8 +182,8 @@ static int calc_handler(request_rec *r) {
     fnRet = validateFileName(fileName, r);
 
     //fnRet != -2 means that file does not exist -> error and stop processing
-    if(fnRet != -2){
-      ap_rputs("\"error\" : \"err_fileName_not_set\"}", r);
+    if(fnRet != -5){
+      ap_rprintf(r, "\"error\" : \"err_fileName_not_set_%i\"}", fnRet);
 
       return OK;
     }
@@ -266,7 +266,7 @@ static int validateFileName(const char* fileName, request_rec *r){
 
   if(exists){
     free(vars);
-    return -2;
+    return -5;
   }
 
   free(vars);
